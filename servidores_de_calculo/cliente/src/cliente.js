@@ -28,7 +28,7 @@ function main() {
 
   const alunoConsulta = { matricula: 123 }
   console.log("Request:", alunoConsulta);
-  
+
   client.getAlunoByMatricula(alunoConsulta, function (err, response) {
     console.log("Response:", response);
   });
