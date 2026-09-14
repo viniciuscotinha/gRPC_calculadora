@@ -13,8 +13,6 @@ const protos = grpc.loadPackageDefinition(packageDefinition);
 
 const insecure = grpc.credentials.createInsecure();
 
-// Os clientes são criados uma vez só, na subida do servidor. Criar um cliente
-// novo a cada request abriria uma conexão nova a cada chamada.
 const somarClient = new protos.SomarService("localhost:4001", insecure);
 const subtrairClient = new protos.SubtrairService("localhost:4002", insecure);
 const multiplicarClient = new protos.MultiplicarService("localhost:4003", insecure);
@@ -88,8 +86,6 @@ async function OperacaoEscolhida(call, callback) {
                 });
         }
     } catch (err) {
-        // O microserviço está fora do ar ou devolveu erro: em vez de derrubar a
-        // calculadora, devolvemos o motivo no campo `error` da resposta.
         return responder(callback, {
             saida1: 0,
             saida2: 0,
@@ -105,7 +101,6 @@ function responder(callback, response) {
 
 async function main() {
     const server = new grpc.Server();
-    // O nome da chave precisa ser igual ao nome do rpc declarado no .proto.
     server.addService(protos.CalculadoraService.service, {
         OperacaoEscolhida,
     });
