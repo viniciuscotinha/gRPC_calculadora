@@ -1,23 +1,23 @@
 syntax = "proto3";
 
 service CalculadoraService {
-    rcp OperacaoEscolhida (OperacaoEscolhidaRequest) returns (OperacaoEscolhidaResponse) {};
+    rpc OperacaoEscolhida (OperacaoEscolhidaRequest) returns (OperacaoEscolhidaResponse) {};
 }
 
 service SomarService {
-    rcp Somar (SomarRequest) returns (SomarResponse) {};
+    rpc Somar (SomarRequest) returns (SomarResponse) {};
 }
 
 service SubtrairService {
-    rcp Subtrair (SubtrairRequest) returns (SubtrairResponse) {};
+    rpc Subtrair (SubtrairRequest) returns (SubtrairResponse) {};
 }
 
 service MultiplicarService {
-    rcp Multiplicar (MultiplicarRequest) returns (MultiplicarResponse) {};
+    rpc Multiplicar (MultiplicarRequest) returns (MultiplicarResponse) {};
 }
 
 service DividirService {
-    Dividir (DividirRequest) returns (DividirResponse) {};
+    rpc Dividir (DividirRequest) returns (DividirResponse) {};
 }
 
 message SomarRequest {
