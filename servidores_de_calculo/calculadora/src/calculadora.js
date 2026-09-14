@@ -16,7 +16,7 @@ function escolherOperacao(call, callback) {
     const saida1 = 0;
     const saida2 = 0;
 
-    switch(operacao){
+    switch (operacao) {
         case "+":
             const somarClient = new protos.SomarService(
                 "localhost:4001",
@@ -29,7 +29,7 @@ function escolherOperacao(call, callback) {
                     console.log("Response:", response);
                 }
             );
-        break;
+            break;
         case "-":
             const subtrairClient = new protos.SubtrairService(
                 "localhost:4002",
@@ -42,7 +42,7 @@ function escolherOperacao(call, callback) {
                     console.log("Response:", response);
                 }
             );
-        break;
+            break;
         case "*":
             const multiplicarClient = new protos.MultiplicarService(
                 "localhost:4003",
@@ -55,13 +55,13 @@ function escolherOperacao(call, callback) {
                     console.log("Response:", response);
                 }
             );
-        break;
+            break;
         case "/":
             const dividirClient = new protos.DividirService(
                 "localhost:4004",
                 grpc.credentials.createInsecure()
             );
-            const {resultado1, resultado2} = dividirClient.dividir(
+            const { resultado1, resultado2 } = dividirClient.dividir(
                 entrada1,
                 entrada2,
                 function (err, response) {
@@ -70,7 +70,7 @@ function escolherOperacao(call, callback) {
             );
             saida1 = resultado1;
             saida2 = resultado2;
-        break;
+            break;
         default:
             error = "Operação Inválida"
     }
