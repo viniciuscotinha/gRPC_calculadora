@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+service CalculadoraService {
+    rcp Somar (SomarRequest) returns (SomarResponse) {};
+    rcp Subtrair (SubtrairRequest) returns (SubtrairResponse) {};
+    rcp Multiplicar (MultiplicarRequest) returns (MultiplicarResponse) {};
+    rcp Dividir (DividirRequest) returns (DividirResponse) {};
+}
+
+message SomarRequest {
+    int32 parcela1 = 1;
+    int32 parcela2 = 2;
+}
+
+message SomarResponse {
+    int32 resultado = 1;
+}
+
+message SubtrairRequest {
+    int32 minuendo = 1;
+    int32 subtraendo = 2;
+}
+
+message SubtrairResponse {
+    int32 resultado = 1;
+}
+
+message MultiplicarRequest {
+    int32 fator1 = 1;
+    int32 fator2 = 2;
+}
+
+message MultiplicarResponse {
+    int32 resultado = 1;
+}
+
+message DividirRequest {
+    int32 dividendo = 1;
+    int32 divisor = 2;
+}
+
+message DividirResponse {
+    int32 quociente = 1;
+    int32 resto = 2;
+}
