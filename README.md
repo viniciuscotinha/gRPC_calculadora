@@ -81,52 +81,81 @@ request/response, com nomes de campo específicos do domínio (`parcela1`,
 
 ## Como executar
 
-**Pré-requisito:** Node.js instalado (`node -v` para conferir).
+**Pré-requisito:** Node.js instalado (`node -v` para conferir). O projeto não
+depende de nada específico do Windows — roda igual em Linux e macOS.
 
-### 1. Instalar as dependências
+Todos os caminhos abaixo são **relativos à raiz do repositório**, então funcionam
+em qualquer máquina, independente de onde o projeto foi clonado.
+
+### 1. Clonar o repositório
+
+```bash
+git clone https://github.com/viniciuscotinha/gRPC_calculadora.git
+cd gRPC_calculadora
+```
+
+### 2. Instalar as dependências
 
 Cada serviço é um projeto Node independente, então o `npm install` é feito em
-cada uma das seis pastas:
+cada uma das seis pastas. A partir da raiz do repositório:
+
+<details open>
+<summary>Windows (PowerShell)</summary>
 
 ```powershell
-cd C:\Users\TI\Documents\Projects\gRPC_calculadora\servidores_de_calculo
+cd servidores_de_calculo
 foreach ($p in "somar","subtrair","multiplicar","dividir","calculadora","cliente") {
     Push-Location $p; npm install; Pop-Location
 }
 ```
+</details>
+
+<details>
+<summary>Linux / macOS (bash)</summary>
+
+```bash
+cd servidores_de_calculo
+for p in somar subtrair multiplicar dividir calculadora cliente; do
+    (cd "$p" && npm install)
+done
+```
+</details>
 
 As dependências são apenas `@grpc/grpc-js` e `@grpc/proto-loader`.
 
-### 2. Subir os servidores
+### 3. Subir os servidores
 
 Cada servidor ocupa uma porta e fica rodando, então **cada um precisa do seu
 próprio terminal**. Suba os quatro serviços de cálculo primeiro e a calculadora
 por último.
 
-| Terminal | Pasta | Comando | Porta |
+Em cada terminal, entre na pasta do serviço a partir da raiz do repositório e
+rode o comando correspondente:
+
+| Terminal | Pasta (a partir da raiz) | Comando | Porta |
 |---|---|---|---|
-| 1 | `somar` | `node src/somar.js` | 4001 |
-| 2 | `subtrair` | `node src/subtrair.js` | 4002 |
-| 3 | `multiplicar` | `node src/multiplicar.js` | 4003 |
-| 4 | `dividir` | `node src/dividir.js` | 4004 |
-| 5 | `calculadora` | `node src/calculadora.js` | 4000 |
+| 1 | `servidores_de_calculo/somar` | `node src/somar.js` | 4001 |
+| 2 | `servidores_de_calculo/subtrair` | `node src/subtrair.js` | 4002 |
+| 3 | `servidores_de_calculo/multiplicar` | `node src/multiplicar.js` | 4003 |
+| 4 | `servidores_de_calculo/dividir` | `node src/dividir.js` | 4004 |
+| 5 | `servidores_de_calculo/calculadora` | `node src/calculadora.js` | 4000 |
 
 Exemplo do terminal 1:
 
-```powershell
-cd C:\Users\TI\Documents\Projects\gRPC_calculadora\servidores_de_calculo\somar
+```bash
+cd servidores_de_calculo/somar
 node src/somar.js
 ```
 
 Cada um imprime `Server is running` e fica parado aguardando chamadas — é o
 comportamento esperado. Para encerrar, `Ctrl+C` em cada terminal.
 
-### 3. Rodar o cliente
+### 4. Rodar o cliente
 
 Com os cinco servidores de pé, em um sexto terminal:
 
-```powershell
-cd C:\Users\TI\Documents\Projects\gRPC_calculadora\servidores_de_calculo\cliente
+```bash
+cd servidores_de_calculo/cliente
 node src/cliente.js
 ```
 
@@ -138,10 +167,26 @@ O cliente executa os exemplos em sequência e encerra sozinho.
 por uma execução anterior que não foi encerrada. Para descobrir e encerrar o
 processo:
 
+<details open>
+<summary>Windows (PowerShell)</summary>
+
 ```powershell
 Get-NetTCPConnection -State Listen -LocalPort 4000,4001,4002,4003,4004 | Select-Object LocalPort, OwningProcess
 Stop-Process -Id <PID> -Force
 ```
+</details>
+
+<details>
+<summary>Linux / macOS</summary>
+
+```bash
+lsof -i :4000-4004
+kill <PID>
+```
+</details>
+
+Confira o processo antes de encerrá-lo, para não derrubar outro programa seu que
+esteja usando a mesma porta.
 
 **`UNAVAILABLE ... ECONNREFUSED`** — algum servidor não está rodando. O cliente
 lista no início quais responderam (`[ok]`) e quais não (`[offline]`).
