@@ -11,77 +11,103 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const protos = grpc.loadPackageDefinition(packageDefinition);
 
-function escolherOperacao(call, callback) {
+const insecure = grpc.credentials.createInsecure();
+
+// Os clientes são criados uma vez só, na subida do servidor. Criar um cliente
+// novo a cada request abriria uma conexão nova a cada chamada.
+const somarClient = new protos.SomarService("localhost:4001", insecure);
+const subtrairClient = new protos.SubtrairService("localhost:4002", insecure);
+const multiplicarClient = new protos.MultiplicarService("localhost:4003", insecure);
+const dividirClient = new protos.DividirService("localhost:4004", insecure);
+
+// A chamada gRPC é assíncrona: a resposta chega no callback, não no retorno da
+// função. Envolvemos em uma Promise para poder usar await e só responder ao
+// cliente depois que o microserviço realmente respondeu.
+function chamar(client, metodo, request) {
+    return new Promise((resolve, reject) => {
+        client[metodo](request, (err, response) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(response);
+            }
+        });
+    });
+}
+
+async function OperacaoEscolhida(call, callback) {
     const { operacao, entrada1, entrada2 } = call.request;
-    const saida1 = 0;
-    const saida2 = 0;
+    console.log("Request:", call.request);
 
-    switch (operacao) {
-        case "+":
-            const somarClient = new protos.SomarService(
-                "localhost:4001",
-                grpc.credentials.createInsecure()
-            );
-            saida1 = somarClient.somar(
-                entrada1,
-                entrada2,
-                function (err, response) {
-                    console.log("Response:", response);
+    try {
+        switch (operacao) {
+            case "+": {
+                const { resultado } = await chamar(somarClient, "Somar", {
+                    parcela1: entrada1,
+                    parcela2: entrada2,
+                });
+                return responder(callback, { saida1: resultado, saida2: 0 });
+            }
+
+            case "-": {
+                const { resultado } = await chamar(subtrairClient, "Subtrair", {
+                    minuendo: entrada1,
+                    subtraendo: entrada2,
+                });
+                return responder(callback, { saida1: resultado, saida2: 0 });
+            }
+
+            case "*": {
+                const { resultado } = await chamar(multiplicarClient, "Multiplicar", {
+                    fator1: entrada1,
+                    fator2: entrada2,
+                });
+                return responder(callback, { saida1: resultado, saida2: 0 });
+            }
+
+            case "/": {
+                if (entrada2 === 0) {
+                    return responder(callback, {
+                        saida1: 0,
+                        saida2: 0,
+                        error: "Divisão por zero",
+                    });
                 }
-            );
-            break;
-        case "-":
-            const subtrairClient = new protos.SubtrairService(
-                "localhost:4002",
-                grpc.credentials.createInsecure()
-            );
-            saida1 = subtrairClient.subtrair(
-                entrada1,
-                entrada2,
-                function (err, response) {
-                    console.log("Response:", response);
-                }
-            );
-            break;
-        case "*":
-            const multiplicarClient = new protos.MultiplicarService(
-                "localhost:4003",
-                grpc.credentials.createInsecure()
-            );
-            saida1 = multiplicarClient.multiplicar(
-                entrada1,
-                entrada2,
-                function (err, response) {
-                    console.log("Response:", response);
-                }
-            );
-            break;
-        case "/":
-            const dividirClient = new protos.DividirService(
-                "localhost:4004",
-                grpc.credentials.createInsecure()
-            );
-            const { resultado1, resultado2 } = dividirClient.dividir(
-                entrada1,
-                entrada2,
-                function (err, response) {
-                    console.log("Response:", response);
-                }
-            );
-            saida1 = resultado1;
-            saida2 = resultado2;
-            break;
-        default:
-            error = "Operação Inválida"
+                const { quociente, resto } = await chamar(dividirClient, "Dividir", {
+                    dividendo: entrada1,
+                    divisor: entrada2,
+                });
+                return responder(callback, { saida1: quociente, saida2: resto });
+            }
+
+            default:
+                return responder(callback, {
+                    saida1: 0,
+                    saida2: 0,
+                    error: "Operação Inválida",
+                });
+        }
+    } catch (err) {
+        // O microserviço está fora do ar ou devolveu erro: em vez de derrubar a
+        // calculadora, devolvemos o motivo no campo `error` da resposta.
+        return responder(callback, {
+            saida1: 0,
+            saida2: 0,
+            error: "Falha ao chamar o serviço: " + (err.details || err.message),
+        });
     }
+}
 
-    callback(null, { saida1, saida2, error });
+function responder(callback, response) {
+    console.log("Response:", response);
+    callback(null, response);
 }
 
 async function main() {
     const server = new grpc.Server();
+    // O nome da chave precisa ser igual ao nome do rpc declarado no .proto.
     server.addService(protos.CalculadoraService.service, {
-        escolherOperacao,
+        OperacaoEscolhida,
     });
     await server.bindAsync("0.0.0.0:4000",
         grpc.ServerCredentials.createInsecure(),
